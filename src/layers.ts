@@ -299,7 +299,7 @@ const uniqueValueInfos_compen = treeCompensationStatusLabels.map(
       label: label,
       symbol: new SimpleMarkerSymbol({
         size: 5,
-        color: colorsCompen[0], // the first two letters dictate transparency.
+        color: colorsCompen[index], // the first two letters dictate transparency.
         outline: {
           width: 0.5,
           color: outlineColor,
