@@ -13,7 +13,6 @@ import { MyContext } from "../contexts/MyContext";
 import {
   cpField,
   primaryLabelColor,
-  treeCompensationStatusLabels,
   treeCompensationTypes,
   treeCompensationStatusField,
   valueLabelColor,
@@ -60,7 +59,7 @@ const TreeCompensationChart = () => {
     pieChartStatusData({
       qChart: queryc3.queryExpression(),
       layer: treeCompensationLayer,
-      statusList: treeCompensationStatusLabels,
+      statusList: treeCompensationTypes,
       statusColor: colorsCompen,
       statusField: treeCompensationStatusField,
       statisticType: "count",
