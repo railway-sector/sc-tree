@@ -62,6 +62,7 @@ const TreeCuttingChart = () => {
       statusList: treeCuttingTypes,
       statusColor: colorsCutting,
       statusField: treeCuttinStatusField,
+      statisticField: treeCuttinStatusField,
       statisticType: "count",
     }).then((result: any) => {
       setTreesData(result[0]);

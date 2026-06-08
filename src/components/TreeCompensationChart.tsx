@@ -62,6 +62,7 @@ const TreeCompensationChart = () => {
       statusList: treeCompensationTypes,
       statusColor: colorsCompen,
       statusField: treeCompensationStatusField,
+      statisticField: treeCompensationStatusField,
       statisticType: "count",
     }).then((result: any) => {
       setTreesData(result[0]);

@@ -62,6 +62,7 @@ const TreeConservationChart = () => {
       statusList: treeConservationTypes,
       statusColor: colorsConservation,
       statusField: treeConservationStatusField,
+      statisticField: treeConservationStatusField,
       statisticType: "count",
     }).then((result: any) => {
       setTreesData(result[0]);
