@@ -2,7 +2,6 @@ import * as am5 from "@amcharts/amcharts5";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 import FeatureLayer from "@arcgis/core/layers/FeatureLayer";
 import Query from "@arcgis/core/rest/support/Query";
-import { queryc2 } from "./layers";
 
 // Dynamic chart size
 export function responsiveChart(
@@ -91,6 +90,7 @@ interface chartType {
   pieSeries: any;
   legend: any;
   root: any;
+  qChart: any;
   q1Value?: any;
   q1Field?: any;
   q2Value?: any;
@@ -113,8 +113,7 @@ export function chartRenderer({
   pieSeries,
   legend,
   root,
-  q1Value,
-  q1Field,
+  qChart,
   status_field,
   arcgisScene,
   updateChartPanelwidth,
@@ -173,14 +172,11 @@ export function chartRenderer({
       ? `${status_field} = ${statusSelected}`
       : `${status_field} = '${statusSelected}'`;
 
-    queryc2.qValues = [q1Value];
-    queryc2.qFields = [q1Field];
-    queryc2.qExpression = queryField;
+    qChart.qExpression = queryField;
 
-    console.log(queryc2.queryExpression());
     highlightFilterLayerView({
       layer: layer,
-      qExpression: queryc2.queryExpression(),
+      qExpression: qChart.queryExpression(),
       view: arcgisScene?.view,
     });
   });

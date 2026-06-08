@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { use, useEffect, useRef, useState } from "react";
-import { queryc4, treeConservationLayer } from "../layers";
+import { queryc2, queryc4, treeConservationLayer } from "../layers";
 import * as am5 from "@amcharts/amcharts5";
 import * as am5percent from "@amcharts/amcharts5/percent";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
@@ -129,14 +129,17 @@ const TreeConservationChart = () => {
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
+    queryc2.qValues = [
+      contractpackages === "All" ? undefined : contractpackages,
+    ];
+
     // Render chart
     chartRenderer({
       chart: chart,
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      q1Value: contractpackages === "All" ? undefined : contractpackages,
-      q1Field: cpField,
+      qChart: queryc2,
       status_field: treeConservationStatusField,
       arcgisScene: arcgisMap,
       updateChartPanelwidth: updateChartPanelwidth,
