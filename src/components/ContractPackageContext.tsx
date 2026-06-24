@@ -2,7 +2,7 @@ import { useState, use } from "react";
 import "../index.css";
 import "@esri/calcite-components/dist/components/calcite-segmented-control";
 import "@esri/calcite-components/dist/components/calcite-segmented-control-item";
-import { contractPackage } from "../Query";
+import { contractPackage } from "../query";
 import { MyContext } from "../contexts/MyContext";
 
 export default function ContractPackageSegmentedList() {

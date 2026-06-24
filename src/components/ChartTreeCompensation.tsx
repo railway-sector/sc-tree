@@ -1,76 +1,77 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { use, useEffect, useRef, useState } from "react";
 import { queryc2, queryc3, treeCompensationLayer } from "../layers";
-import * as am5 from "@amcharts/amcharts5";
-import * as am5percent from "@amcharts/amcharts5/percent";
-import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
-import am5themes_Responsive from "@amcharts/amcharts5/themes/Responsive";
-import { thousands_separators, zoomToLayer } from "../Query";
+import { thousands_separators, zoomToLayer } from "../query";
 import "@arcgis/map-components/dist/components/arcgis-map";
 import "@arcgis/map-components/components/arcgis-map";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
 import {
-  cpField,
   primaryLabelColor,
   treeCompensationTypes,
   treeCompensationStatusField,
   valueLabelColor,
   colorsCompen,
 } from "../uniqueValues";
-import { queryDefinitionExpression } from "../QueryExpression";
-import { pieChartStatusData } from "../ChartGenerator";
-import { chartRenderer } from "../ChartRenderer";
+import { queryDefinitionExpression } from "../queryExpression";
+import { pieChartStatusData } from "../chartGenerator";
+import { chartRenderer } from "../chartRenderer";
+import {
+  chartSetter,
+  legendSetter,
+  rootSetter,
+  seriesSetter,
+} from "../chartSetter";
+import { useQuery } from "@tanstack/react-query";
+import type { ChartResponse } from "../interfaceKeys";
 
-// Dispose function
-function maybeDisposeRoot(divId: any) {
-  am5.array.each(am5.registry.rootElements, function (root) {
-    if (root.dom.id === divId) {
-      root.dispose();
-    }
-  });
-}
-
-///*** Others */
-/// Draw chart
-const TreeCompensationChart = () => {
+const ChartTreeCompensation = () => {
   const arcgisMap: any = document.querySelector("arcgis-map") as ArcgisMap;
-  const { contractpackages, updateChartPanelwidth, chartPanelwidth } =
-    use(MyContext);
+  const { contractpackages } = use(MyContext);
+
+  const [chartPanelwidth, setChartPanelwidth] = useState<any>();
+
+  const { data } = useQuery<ChartResponse | any>({
+    queryKey: [
+      contractpackages,
+      treeCompensationStatusField,
+      treeCompensationLayer,
+    ],
+    queryFn: async () => {
+      queryc3.qValues = [
+        contractpackages === "All" ? undefined : contractpackages,
+      ];
+
+      queryDefinitionExpression({
+        queryExpression: queryc3.queryExpression(),
+        featureLayer: [treeCompensationLayer],
+      });
+
+      const chartData = await pieChartStatusData({
+        qChart: queryc3.queryExpression(),
+        layer: treeCompensationLayer,
+        statusList: treeCompensationTypes,
+        statusColor: colorsCompen,
+        statusField: treeCompensationStatusField,
+        statisticField: treeCompensationStatusField,
+        statisticType: "count",
+      });
+
+      zoomToLayer(treeCompensationLayer, arcgisMap?.view);
+
+      return {
+        chartData: chartData[0] || [],
+        totaln: chartData[1] || 0,
+      };
+    },
+  });
+  const chartData = data?.chartData || [];
+  const totaln = data?.totaln || 0;
+
   const pieSeriesRef = useRef<unknown | any | undefined>({});
   const legendRef = useRef<unknown | any | undefined>({});
   const chartRef = useRef<unknown | any | undefined>({});
-  const [treesData, setTreesData] = useState<any>([]);
-  const [treesNumber, setTreesNumber] = useState<any>(0);
-
   const chartID = "pie-compen";
-
-  useEffect(() => {
-    queryc3.qValues = [
-      contractpackages === "All" ? undefined : contractpackages,
-    ];
-    queryc3.qFields = [cpField];
-
-    queryDefinitionExpression({
-      queryExpression: queryc3.queryExpression(),
-      featureLayer: [treeCompensationLayer],
-    });
-
-    pieChartStatusData({
-      qChart: queryc3.queryExpression(),
-      layer: treeCompensationLayer,
-      statusList: treeCompensationTypes,
-      statusColor: colorsCompen,
-      statusField: treeCompensationStatusField,
-      statisticField: treeCompensationStatusField,
-      statisticType: "count",
-    }).then((result: any) => {
-      setTreesData(result[0]);
-      setTreesNumber(result[1]);
-    });
-
-    zoomToLayer(treeCompensationLayer, arcgisMap?.view);
-  }, [contractpackages]);
 
   const new_fontSize = chartPanelwidth / 22.3;
   const new_valueSize = new_fontSize * 1.55;
@@ -80,51 +81,31 @@ const TreeCompensationChart = () => {
   const new_pieInnerLabelFontSize = "0.45em";
 
   useEffect(() => {
-    maybeDisposeRoot(chartID);
-
-    const root = am5.Root.new(chartID);
-    root.container.children.clear();
-    root._logo?.dispose();
-
-    // Set themesf
-    root.setThemes([
-      am5themes_Animated.new(root),
-      am5themes_Responsive.new(root),
-    ]);
-
-    // Create chart
-    const chart = root.container.children.push(
-      am5percent.PieChart.new(root, {
-        centerY: am5.percent(25), //-10
-        y: am5.percent(10), // space between pie chart and total lots
-        layout: root.verticalLayout,
-      }),
-    );
+    const root = rootSetter({ chartID: chartID });
+    const chart = chartSetter({ root: root, centerY: 25, y: 10 });
     chartRef.current = chart;
 
     // Create series
-    const pieSeries = chart.series.push(
-      am5percent.PieSeries.new(root, {
-        name: "Series",
-        categoryField: "category",
-        valueField: "value",
-        legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
-        radius: am5.percent(36), // outer radius
-        innerRadius: am5.percent(20),
-        // scale: 0.5,
-      }),
-    );
+    const pieSeries = seriesSetter({
+      chart: chart,
+      root: root,
+      categoryField: "category",
+      valueField: "value",
+      legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
+      radius: 36,
+      innerRadius: 20,
+    });
     pieSeriesRef.current = pieSeries;
     chart.series.push(pieSeries);
 
-    const legend = root.container.children.push(
-      am5.Legend.new(root, {
-        centerX: am5.percent(50),
-        x: am5.percent(50),
-        y: am5.percent(75),
-        // scale: 1.03,
-      }),
-    );
+    const legend = legendSetter({
+      chart: chart,
+      root: root,
+      centerX: 50,
+      x: 50,
+      y: 75,
+      // scale: 1.03,
+    });
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
@@ -138,11 +119,11 @@ const TreeCompensationChart = () => {
       pieSeries: pieSeries,
       legend: legend,
       root: root,
-      qChart: queryc2,
+      qChart: queryc3,
       status_field: treeCompensationStatusField,
       arcgisScene: arcgisMap,
-      updateChartPanelwidth: updateChartPanelwidth,
-      data: treesData,
+      updateChartPanelwidth: setChartPanelwidth,
+      data: chartData,
       pieSeriesScale: new_pieSeriesScale,
       pieInnerLabel: undefined,
       pieInnerLabelFontSize: new_pieInnerLabelFontSize,
@@ -156,10 +137,10 @@ const TreeCompensationChart = () => {
     return () => {
       root.dispose();
     };
-  }, [chartID, treesData]);
+  }, [chartID, chartData]);
 
   useEffect(() => {
-    pieSeriesRef.current?.data.setAll(treesData);
+    pieSeriesRef.current?.data.setAll(chartData);
     legendRef.current?.data.setAll(pieSeriesRef.current.dataItems);
   });
 
@@ -202,7 +183,7 @@ const TreeCompensationChart = () => {
               margin: "auto",
             }}
           >
-            {thousands_separators(treesNumber)}
+            {thousands_separators(totaln)}
           </dd>
         </dl>
       </div>
@@ -219,4 +200,4 @@ const TreeCompensationChart = () => {
   );
 }; // End of lotChartgs
 
-export default TreeCompensationChart;
+export default ChartTreeCompensation;

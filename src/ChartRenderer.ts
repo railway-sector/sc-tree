@@ -39,52 +39,6 @@ export function responsiveChart(
   });
 }
 
-type layerViewQueryProps = {
-  layer?: any;
-  qExpression?: any;
-  view: any;
-};
-
-export const highlightFilterLayerView = ({
-  layer,
-  qExpression,
-  view,
-}: layerViewQueryProps) => {
-  const query = layer.createQuery();
-  query.where = qExpression;
-  let highlightSelect: any;
-
-  view?.whenLayerView(layer).then((layerView: any) => {
-    layer?.queryObjectIds(query).then((results: any) => {
-      const objID = results;
-
-      const queryExt = new Query({
-        objectIds: objID,
-      });
-      layer?.queryExtent(queryExt).then((result: any) => {
-        if (result?.extent) {
-          view?.goTo(result.extent);
-        }
-      });
-
-      highlightSelect && highlightSelect.remove();
-      highlightSelect = layerView.highlight(objID);
-    });
-
-    layerView.filter = new FeatureFilter({
-      where: qExpression,
-    });
-
-    // For initial state, we need to add this
-    view?.on("click", () => {
-      layerView.filter = new FeatureFilter({
-        where: undefined,
-      });
-      highlightSelect && highlightSelect.remove();
-    });
-  });
-};
-
 interface chartType {
   chart: any;
   pieSeries: any;
@@ -176,7 +130,7 @@ export function chartRenderer({
 
     highlightFilterLayerView({
       layer: layer,
-      qExpression: qChart.queryExpression(),
+      qChart: qChart,
       view: arcgisScene?.view,
     });
   });
@@ -234,3 +188,53 @@ export function chartRenderer({
 
   pieSeries.appear(1000, 100);
 }
+
+type layerViewQueryProps = {
+  layer?: any;
+  qExpression?: any;
+  qChart?: any;
+  view: any;
+};
+
+export const highlightFilterLayerView = ({
+  layer,
+  view,
+  qChart,
+}: layerViewQueryProps) => {
+  const query = layer.createQuery();
+  const qe = qChart.queryExpression();
+  query.where = qe;
+  let highlightSelect: any;
+
+  view?.whenLayerView(layer).then((layerView: any) => {
+    layer?.queryObjectIds(query).then((results: any) => {
+      const objID = results;
+
+      const queryExt = new Query({
+        objectIds: objID,
+      });
+      layer?.queryExtent(queryExt).then((result: any) => {
+        if (result?.extent) {
+          view?.goTo(result.extent);
+        }
+      });
+
+      highlightSelect && highlightSelect.remove();
+      highlightSelect = layerView.highlight(objID);
+    });
+
+    layerView.filter = new FeatureFilter({
+      where: qe,
+    });
+
+    // For initial state, we need to add this
+    view?.on("click", () => {
+      layerView.filter = new FeatureFilter({
+        where: undefined,
+      });
+      qChart.qExpression = undefined;
+      qChart.q2Expression = undefined;
+      highlightSelect && highlightSelect.remove();
+    });
+  });
+};
