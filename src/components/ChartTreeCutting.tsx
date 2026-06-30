@@ -1,20 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { use, useEffect, useRef, useState } from "react";
-import { queryc, treeCuttingLayer } from "../layers";
-import { thousands_separators, zoomToLayer } from "../query";
+import { piechart_cut, queryc, treeCuttingLayer } from "../layers";
+import { pieChartData, thousands_separators, zoomToLayer } from "../query";
 import "@arcgis/map-components/dist/components/arcgis-map";
 import "@arcgis/map-components/components/arcgis-map";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
 import {
-  colorsCutting,
   primaryLabelColor,
   treeCuttingTypes,
   treeCuttinStatusField,
   valueLabelColor,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
-import { pieChartStatusData } from "../chartGenerator";
 import { chartRenderer } from "../chartRenderer";
 import {
   chartSetter,
@@ -42,11 +40,12 @@ const ChartTreeCutting = () => {
         featureLayer: [treeCuttingLayer],
       });
 
-      const chartData = await pieChartStatusData({
-        qChart: queryc.queryExpression(),
+      //--- Pie chart data
+      const chartData = await pieChartData({
+        piechart: piechart_cut,
+        qChart: queryc,
         layer: treeCuttingLayer,
         statusList: treeCuttingTypes,
-        statusColor: colorsCutting,
         statusField: treeCuttinStatusField,
         statisticField: treeCuttinStatusField,
         statisticType: "count",

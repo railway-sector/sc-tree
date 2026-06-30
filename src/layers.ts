@@ -17,6 +17,34 @@ import {
   treeCuttingStatusLabels,
   treeCuttingStatusValues,
 } from "./uniqueValues";
+import ChartPieSeries from "chart-pie-series";
+
+export const piechart_cut = new ChartPieSeries(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const piechart_comp = new ChartPieSeries(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+);
+
+export const piechart_cons = new ChartPieSeries(
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+  undefined,
+);
 
 export const queryc = new QueryExpressionLayers(
   undefined,

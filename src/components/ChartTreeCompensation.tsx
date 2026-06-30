@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { use, useEffect, useRef, useState } from "react";
-import { queryc2, queryc3, treeCompensationLayer } from "../layers";
-import { thousands_separators, zoomToLayer } from "../query";
+import { piechart_comp, queryc3, treeCompensationLayer } from "../layers";
+import { pieChartData, thousands_separators, zoomToLayer } from "../query";
 import "@arcgis/map-components/dist/components/arcgis-map";
 import "@arcgis/map-components/components/arcgis-map";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
@@ -11,10 +11,8 @@ import {
   treeCompensationTypes,
   treeCompensationStatusField,
   valueLabelColor,
-  colorsCompen,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
-import { pieChartStatusData } from "../chartGenerator";
 import { chartRenderer } from "../chartRenderer";
 import {
   chartSetter,
@@ -47,11 +45,12 @@ const ChartTreeCompensation = () => {
         featureLayer: [treeCompensationLayer],
       });
 
-      const chartData = await pieChartStatusData({
-        qChart: queryc3.queryExpression(),
+      //--- Pie chart data
+      const chartData = await pieChartData({
+        piechart: piechart_comp,
+        qChart: queryc3,
         layer: treeCompensationLayer,
         statusList: treeCompensationTypes,
-        statusColor: colorsCompen,
         statusField: treeCompensationStatusField,
         statisticField: treeCompensationStatusField,
         statisticType: "count",
@@ -108,10 +107,6 @@ const ChartTreeCompensation = () => {
     });
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
-
-    queryc2.qValues = [
-      contractpackages === "All" ? undefined : contractpackages,
-    ];
 
     // Render chart
     chartRenderer({

@@ -40,6 +40,7 @@ export const treeCompensationTypes = treeCompensationStatusLabels.map(
     return Object.assign({
       category: label,
       value: treeCompensationStatusValues[index],
+      color: colorsCompen[index],
     });
   },
 );
@@ -81,6 +82,7 @@ export const treeConservationTypes = treeConserveStatusLabels.map(
     return Object.assign({
       category: status,
       value: index + 1,
+      color: colorsConservation[index],
     });
   },
 );

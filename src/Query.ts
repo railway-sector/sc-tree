@@ -49,7 +49,41 @@ export async function dateUpdate() {
   });
 }
 
-// Thousand separators function
+//---------------------------------------------//
+//           Pie chart                         //
+//---------------------------------------------//
+// 'piechart' = constant declared from class ChartPieSeries in layers.ts
+interface pieChartDataType {
+  piechart: any;
+  qChart: any;
+  layer: any;
+  statusList: any;
+  statusField: any;
+  statisticField: any;
+  statisticType: "sum" | "count";
+}
+export async function pieChartData({
+  piechart,
+  qChart,
+  layer,
+  statusList,
+  statusField,
+  statisticField,
+  statisticType,
+}: pieChartDataType) {
+  piechart.qChart = qChart.queryExpression();
+  piechart.layer = layer;
+  piechart.statusList = statusList;
+  piechart.statusField = statusField;
+  piechart.statisticField = statisticField;
+  piechart.statisticType = statisticType;
+
+  return await piechart.chartDataPieSeries();
+}
+
+//---------------------------------------------//
+//           Other functions                   //
+//---------------------------------------------//
 export function thousands_separators(num: any) {
   if (num) {
     const num_parts = num.toString().split(".");
