@@ -1,15 +1,18 @@
-import { useEffect, useState } from "react";
 import ContractPackageSegmentedList from "./ContractPackageContext";
 import { dateUpdate } from "../query";
 import { primaryLabelColor } from "../uniqueValues";
+import { useQuery } from "@tanstack/react-query";
 
 function Header() {
-  const [asOfDate, setAsOfDate] = useState(null);
-  useEffect(() => {
-    dateUpdate().then((response) => {
-      setAsOfDate(response);
-    });
-  }, []);
+  const { data } = useQuery<any>({
+    queryKey: [],
+    queryFn: () => dateUpdate(),
+    select: (response) => {
+      return { asOfDate: response };
+    },
+    staleTime: Infinity,
+  });
+  const asOfDate = data?.asOfDate || "";
 
   return (
     <>
