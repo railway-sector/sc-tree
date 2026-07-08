@@ -13,7 +13,6 @@ import {
   valueLabelColor,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
-import { chartRenderer } from "../chartRenderer";
 import {
   chartSetter,
   legendSetter,
@@ -22,13 +21,14 @@ import {
 } from "../chartSetter";
 import { useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
+import ChartPieSeriesRender from "chart-pie-series-render";
 
 const ChartTreeConservation = () => {
   const arcgisMap: any = document.querySelector("arcgis-map") as ArcgisMap;
   const { contractpackages } = use(MyContext);
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
 
-  const { data } = useQuery<ChartResponse | any>({
+  const { data, isLoading } = useQuery<ChartResponse | any>({
     queryKey: [
       contractpackages,
       treeConservationStatusField,
@@ -107,23 +107,25 @@ const ChartTreeConservation = () => {
     legend.data.setAll(pieSeries.dataItems);
 
     // Render chart
-    chartRenderer({
-      chart: chart,
-      pieSeries: pieSeries,
-      legend: legend,
-      root: root,
-      qChart: queryc4,
-      status_field: treeConservationStatusField,
-      arcgisScene: arcgisMap,
-      updateChartPanelwidth: setChartPanelwidth,
-      data: chartData,
-      pieSeriesScale: new_pieSeriesScale,
-      pieInnerLabel: undefined,
-      pieInnerLabelFontSize: new_pieInnerLabelFontSize,
-      pieInnerValueFontSize: new_pieInnerValueFontSize,
-      layer: treeConservationLayer,
-      statusArray: treeConservationTypes,
-    });
+    const crender = new ChartPieSeriesRender(
+      chart,
+      pieSeries,
+      legend,
+      root,
+      queryc4,
+      undefined,
+      treeConservationStatusField,
+      arcgisMap?.view,
+      setChartPanelwidth,
+      chartData,
+      new_pieSeriesScale,
+      "TREES",
+      new_pieInnerLabelFontSize,
+      new_pieInnerValueFontSize,
+      treeConservationLayer,
+      treeConservationTypes,
+    );
+    crender.chartDataRenderer();
 
     pieSeries.appear(1000, 100);
 
@@ -173,6 +175,7 @@ const ChartTreeConservation = () => {
               fontFamily: "calibri",
               lineHeight: "1.2",
               margin: "auto",
+              opacity: isLoading ? 0 : 1,
             }}
           >
             {thousands_separators(totaln)}
@@ -185,6 +188,7 @@ const ChartTreeConservation = () => {
           height: "71vh",
           backgroundColor: "rgb(0,0,0,0)",
           color: "white",
+          opacity: isLoading ? 0 : 1,
           // marginBottom: "-1.5vh",
         }}
       ></div>
