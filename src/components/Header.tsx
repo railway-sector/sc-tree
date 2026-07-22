@@ -5,14 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 
 function Header() {
   const { data } = useQuery<any>({
-    queryKey: [],
-    queryFn: () => dateUpdate(),
-    select: (response) => {
-      return { asOfDate: response };
-    },
+    queryKey: ["As_Of_Date"],
+    queryFn: () => dateUpdate("Trees"),
     staleTime: Infinity,
   });
-  const asOfDate = data?.asOfDate || "";
+  const asofdate = data ?? "";
 
   return (
     <>
@@ -56,7 +53,7 @@ function Header() {
             marginLeft: "auto",
           }}
         >
-          {!asOfDate ? "" : "As of " + asOfDate}
+          {!asofdate ? "" : "As of " + asofdate}
         </div>
         {/* Segmented List component */}
         <div

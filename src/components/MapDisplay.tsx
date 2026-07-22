@@ -21,7 +21,6 @@ function MapDisplay() {
 
   return (
     <arcgis-map
-      // item-id="5ba14f5a7db34710897da0ce2d46d55f"
       basemap="dark-gray-vector"
       zoom={10}
       center="120.99, 14.4"

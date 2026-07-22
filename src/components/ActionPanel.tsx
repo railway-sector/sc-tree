@@ -32,6 +32,13 @@ function ActionPanel() {
     }
   });
 
+  //--- Click action handler function for active & next widget
+  const handleActionClick = (event: any) => {
+    const id = event.target.id;
+    setNextWidget(id);
+    setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
+  };
+
   return (
     <>
       <calcite-shell-panel
@@ -56,11 +63,7 @@ function ActionPanel() {
             icon="layers"
             text="layers"
             id="layers"
-            //textEnabled={true}
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -68,10 +71,7 @@ function ActionPanel() {
             icon="basemap"
             text="basemaps"
             id="basemaps"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
 
           <calcite-action
@@ -79,10 +79,7 @@ function ActionPanel() {
             icon="information"
             text="Information"
             id="information"
-            onClick={(event: any) => {
-              setNextWidget(event.target.id);
-              setActiveWidget(nextWidget === activeWidget ? null : nextWidget);
-            }}
+            onClick={handleActionClick}
           ></calcite-action>
         </calcite-action-bar>
 
@@ -91,7 +88,6 @@ function ActionPanel() {
             referenceElement="arcgis-map"
             selectionMode="multiple"
             visibilityAppearance="checkbox"
-            // show-collapse-button
             show-filter
             filter-placeholder="Filter layers"
             listItemCreatedFunction={defineActions}

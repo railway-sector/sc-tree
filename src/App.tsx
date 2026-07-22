@@ -9,10 +9,10 @@ import MapDisplay from "./components/MapDisplay";
 import ActionPanel from "./components/ActionPanel";
 import Header from "./components/Header";
 import MainChart from "./components/MainChart";
-import { contractPackage } from "./query";
 import { MyContext } from "./contexts/MyContext";
 import { authenticate } from "./autho";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { cpackages } from "./uniqueValues";
 
 const queryClient = new QueryClient();
 
@@ -22,11 +22,9 @@ export function App(): React.JSX.Element {
     authenticate(setLoggedInState, "Wl9NmZcURHfdBmju");
   }, []);
 
-  const [contractpackages, setContractpackages] = useState<any>(
-    contractPackage[0],
-  );
-  const updateContractPackage = (newContractpackage: any) => {
-    setContractpackages(newContractpackage);
+  const [cpackage, setCpackage] = useState<any>(cpackages[0]);
+  const updateCpackage = (newContractpackage: any) => {
+    setCpackage(newContractpackage);
   };
 
   return (
@@ -39,12 +37,7 @@ export function App(): React.JSX.Element {
             "--calcite-color-background": "#2b2b2b",
           }}
         >
-          <MyContext
-            value={{
-              contractpackages,
-              updateContractPackage,
-            }}
-          >
+          <MyContext value={{ cpackage, updateCpackage }}>
             <QueryClientProvider client={queryClient}>
               <ActionPanel />
               <MapDisplay />

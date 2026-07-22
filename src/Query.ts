@@ -1,58 +1,23 @@
+import Query from "@arcgis/core/rest/support/Query";
 import { dateTable } from "./layers";
+import StatisticDefinition from "@arcgis/core/rest/support/StatisticDefinition";
+import type FeatureLayer from "@arcgis/core/layers/FeatureLayer";
+import QueryExpressionLayers from "query-layers-expression";
 
-// For segmented list
-export const contractPackage = [
-  "All",
-  "S-01",
-  "S-02",
-  "S-03a",
-  "S-03b",
-  "S-03c",
-  "S-04",
-  "S-05",
-  "S-06",
-  "S-07",
-];
-
-// Updat date
-export async function dateUpdate() {
-  const monthList = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const query = dateTable.createQuery();
-  query.where = "project = 'SC'" + " AND " + "category = 'Trees'";
-
-  return dateTable.queryFeatures(query).then((response: any) => {
-    const stats = response.features;
-    const dates = stats.map((result: any) => {
-      const date = new Date(result.attributes.date);
-      const year = date.getFullYear();
-      const month = monthList[date.getMonth()];
-      const day = date.getDate();
-      console.log(date);
-      const final = year < 1990 ? "" : `${month} ${day}, ${year}`;
-      return final;
-    });
-    return dates;
+//---------------------------------------------------------//
+//                 Add Layers to Map                      //
+//---------------------------------------------------------//
+export function addLayersToMap(map: any, layersList: any[]) {
+  layersList.forEach((layer: any) => {
+    map.add(layer);
   });
 }
 
 //---------------------------------------------//
-//           Pie chart                         //
+//           Lot Pie chart                     //
 //---------------------------------------------//
-// 'piechart' = constant declared from class ChartPieSeries in layers.ts
+//--- Chart Data Generation helper function
+// `pieChartData` function helps to assign parameter names to class `ChartPieSeries`
 interface pieChartDataType {
   piechart: any;
   qChart: any;
@@ -62,6 +27,7 @@ interface pieChartDataType {
   statisticField: any;
   statisticType: "sum" | "count";
 }
+
 export async function pieChartData({
   piechart,
   qChart,
@@ -71,14 +37,131 @@ export async function pieChartData({
   statisticField,
   statisticType,
 }: pieChartDataType) {
-  piechart.qChart = qChart.queryExpression();
-  piechart.layer = layer;
-  piechart.statusList = statusList;
-  piechart.statusField = statusField;
-  piechart.statisticField = statisticField;
-  piechart.statisticType = statisticType;
-
+  // piechart.layer = layer, .....
+  Object.assign(piechart, {
+    qChart: qChart.queryExpression(),
+    layer,
+    statusList,
+    statusField,
+    statisticField,
+    statisticType,
+  });
   return await piechart.chartDataPieSeries();
+}
+
+//--- Separate calculation
+interface fieldStatisticType {
+  qChart: any;
+  layer: any;
+  statisticField: any;
+  statisticType: "count" | "sum";
+}
+
+export async function fieldStatistic({
+  qChart,
+  layer,
+  statisticField,
+  statisticType,
+}: fieldStatisticType) {
+  //--- Query
+  const query = new Query({
+    where: qChart,
+    outStatistics: [
+      new StatisticDefinition({
+        onStatisticField: statisticField,
+        outStatisticFieldName: "statsCollect",
+        statisticType,
+      }),
+    ],
+  });
+
+  return layer?.queryFeatures(query).then((response: any) => {
+    return response.features[0].attributes.statsCollect;
+  });
+}
+
+//--- Chart Render helper function
+// `pieChartRender` function helps to assign parameter names to class `ChartPieSeriesRender`
+interface PieChartRenderType {
+  render: any | null; // the first instance of new ChartPieSeriesRender
+  chart: any; // amChart
+  pieSeries: any;
+  legend: any;
+  root: any;
+  qChart: any;
+  q2Expression?: any;
+  status_field: any;
+  view: any;
+  updateChartPanelwidth: any;
+  data: any;
+  seriesScale: any;
+  innerLabel?: any;
+  innerLabelFontSize?: any;
+  innerValueFontSize?: any;
+  layer: FeatureLayer | any;
+  statusArray: StatusQueryItem[];
+  bkg_color_switch?: boolean;
+  seriesFillHash?: boolean;
+}
+
+interface StatusQueryItem {
+  category: string;
+  value: number | string;
+  color: string;
+}
+
+export async function PieChartRender({ render, ...props }: PieChartRenderType) {
+  // render.chart = chart, render.legend = legend,....
+  Object.assign(render, props);
+  return await render.chartDataRenderer();
+}
+
+//--- Returns query expression
+export const makeQuery = (
+  qValues: string[],
+  qFields: string[],
+  qExpression?: string,
+  q2Expression?: string,
+) => {
+  const q = new QueryExpressionLayers();
+  q.qValues = qValues;
+  q.qFields = qFields;
+  if (qExpression) q.qExpression = qExpression;
+  if (q2Expression) q.q2Expression = q2Expression;
+  return q;
+};
+
+//---------------------------------------------------------//
+//                Get as-of-date                           //
+//---------------------------------------------------------//
+export function yearMonthDay(date: Date) {
+  return {
+    year: date?.getFullYear() ?? 0,
+    month: date?.getMonth() + 1,
+    day: date?.getDate(),
+  };
+}
+
+export function toAsofdate(date: Date) {
+  //--- Return displayed date: (as of date)
+  const { year, day } = yearMonthDay(date);
+  const cmonth = date?.toLocaleString("en-US", { month: "long" });
+  return `${cmonth} ${day}, ${year}`;
+}
+
+export async function dateUpdate(category: string) {
+  //--- Only executed during an initial render
+  const query = new Query({
+    where: `project = 'N2' AND category = '${category}'`,
+  });
+
+  const { features } = await dateTable.queryFeatures(query);
+  return features.map(({ attributes }: any) => {
+    const date = new Date(attributes.date);
+    const asofdate = toAsofdate(date);
+
+    return asofdate;
+  });
 }
 
 //---------------------------------------------//
@@ -94,25 +177,10 @@ export function thousands_separators(num: any) {
 
 export function zoomToLayer(layer: any, view: any) {
   return layer.queryExtent().then((response: any) => {
-    view
-      ?.goTo(response.extent, {
-        //response.extent
-        //speedFactor: 2,
-      })
-      .catch((error: any) => {
-        if (error.name !== "AbortError") {
-          console.error(error);
-        }
-      });
+    view?.goTo(response.extent, {}).catch((error: any) => {
+      if (error.name !== "AbortError") {
+        console.error(error);
+      }
+    });
   });
-}
-
-export function processParams(graphic: any, layerView: any) {
-  if (!graphic || !layerView) {
-    throw new Error("Graphic or layerView not provided.");
-  }
-
-  if (!graphic.isAggregate) {
-    throw new Error("Graphic must represent a cluster.");
-  }
 }

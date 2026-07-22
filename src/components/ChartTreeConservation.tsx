@@ -1,16 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { use, useEffect, useRef, useState } from "react";
-import { piechart_cons, queryc4, treeConservationLayer } from "../layers";
-import { pieChartData, thousands_separators, zoomToLayer } from "../query";
+import { treeConservationLayer } from "../layers";
+import {
+  makeQuery,
+  pieChartData,
+  PieChartRender,
+  thousands_separators,
+  zoomToLayer,
+} from "../query";
 import "@arcgis/map-components/dist/components/arcgis-map";
 import "@arcgis/map-components/components/arcgis-map";
 import { ArcgisMap } from "@arcgis/map-components/dist/components/arcgis-map";
 import { MyContext } from "../contexts/MyContext";
 import {
   primaryLabelColor,
-  treeConservationTypes,
-  treeConservationStatusField,
   valueLabelColor,
+  cp_f,
+  treen_status_f,
+  treen_status_q,
 } from "../uniqueValues";
 import { queryDefinitionExpression } from "../queryExpression";
 import {
@@ -22,23 +29,20 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import ChartPieSeriesRender from "chart-pie-series-render";
+import ChartPieSeries from "chart-pie-series";
 
 const ChartTreeConservation = () => {
   const arcgisMap: any = document.querySelector("arcgis-map") as ArcgisMap;
-  const { contractpackages } = use(MyContext);
+  const { cpackage } = use(MyContext);
   const [chartPanelwidth, setChartPanelwidth] = useState<any>();
 
-  const { data, isLoading } = useQuery<ChartResponse | any>({
-    queryKey: [
-      contractpackages,
-      treeConservationStatusField,
-      treeConservationLayer,
-    ],
-    queryFn: async () => {
-      queryc4.qValues = [
-        contractpackages === "All" ? undefined : contractpackages,
-      ];
+  //--- Common qValues and qFields for QueryExpressionLayers class
+  const qV = [cpackage === "All" ? undefined : cpackage];
+  const queryc4 = makeQuery(qV, [cp_f]);
 
+  const { data, isLoading } = useQuery<ChartResponse | any>({
+    queryKey: [cpackage, treen_status_f, treeConservationLayer],
+    queryFn: async () => {
       queryDefinitionExpression({
         queryExpression: queryc4.queryExpression(),
         featureLayer: [treeConservationLayer],
@@ -46,12 +50,12 @@ const ChartTreeConservation = () => {
 
       //--- Pie chart data
       const chartData = await pieChartData({
-        piechart: piechart_cons,
+        piechart: new ChartPieSeries(),
         qChart: queryc4,
         layer: treeConservationLayer,
-        statusList: treeConservationTypes,
-        statusField: treeConservationStatusField,
-        statisticField: treeConservationStatusField,
+        statusList: treen_status_q,
+        statusField: treen_status_f,
+        statisticField: treen_status_f,
         statisticType: "count",
       });
 
@@ -107,26 +111,27 @@ const ChartTreeConservation = () => {
     legend.data.setAll(pieSeries.dataItems);
 
     // Render chart
-    const crender = new ChartPieSeriesRender(
+    PieChartRender({
+      render: new ChartPieSeriesRender(),
       chart,
-      pieSeries,
+      pieSeries: pieSeries,
       legend,
       root,
-      queryc4,
-      undefined,
-      treeConservationStatusField,
-      arcgisMap?.view,
-      setChartPanelwidth,
-      chartData,
-      new_pieSeriesScale,
-      "TREES",
-      new_pieInnerLabelFontSize,
-      new_pieInnerValueFontSize,
-      treeConservationLayer,
-      treeConservationTypes,
-    );
-    crender.chartDataRenderer();
-
+      qChart: queryc4,
+      q2Expression: undefined,
+      status_field: treen_status_f,
+      view: arcgisMap?.view,
+      updateChartPanelwidth: setChartPanelwidth,
+      data: chartData,
+      seriesScale: new_pieSeriesScale,
+      innerLabel: "PRIVATE LOTS",
+      innerLabelFontSize: new_pieInnerLabelFontSize,
+      innerValueFontSize: new_pieInnerValueFontSize,
+      layer: treeConservationLayer,
+      statusArray: treen_status_q,
+      bkg_color_switch: false,
+      seriesFillHash: undefined,
+    });
     pieSeries.appear(1000, 100);
 
     return () => {
