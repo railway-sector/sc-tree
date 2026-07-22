@@ -125,7 +125,7 @@ const ChartTreeCutting = () => {
       updateChartPanelwidth: setChartPanelwidth,
       data: chartData,
       seriesScale: new_pieSeriesScale,
-      innerLabel: "PRIVATE LOTS",
+      innerLabel: "TREES",
       innerLabelFontSize: new_pieInnerLabelFontSize,
       innerValueFontSize: new_pieInnerValueFontSize,
       layer: treeCuttingLayer,
