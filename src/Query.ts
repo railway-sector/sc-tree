@@ -152,13 +152,14 @@ export function toAsofdate(date: Date) {
 export async function dateUpdate(category: string) {
   //--- Only executed during an initial render
   const query = new Query({
-    where: `project = 'N2' AND category = '${category}'`,
+    where: `project = 'SC' AND category = '${category}'`,
+    outFields: ["project", "category", "date"],
   });
 
   const { features } = await dateTable.queryFeatures(query);
+  console.log(features);
   return features.map(({ attributes }: any) => {
-    const date = new Date(attributes.date);
-    const asofdate = toAsofdate(date);
+    const asofdate = toAsofdate(new Date(attributes.date));
 
     return asofdate;
   });
