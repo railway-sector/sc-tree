@@ -14,6 +14,12 @@ function ActionPanel() {
   const [nextWidget, setNextWidget] = useState<any>(null);
   const shellPanel: any = document.getElementById("left-shell-panel");
 
+  //--- Render only when selected
+  const [hasOpenedBasemaps, setHasOpenedBasemaps] = useState(false);
+  useEffect(() => {
+    if (nextWidget === "basemaps") setHasOpenedBasemaps(true);
+  }, [nextWidget]);
+
   useEffect(() => {
     if (activeWidget) {
       const actionActiveWidget: any = document.querySelector(
@@ -95,7 +101,9 @@ function ActionPanel() {
         </calcite-panel>
 
         <calcite-panel heading="Basemaps" data-panel-id="basemaps" hidden>
-          <arcgis-basemap-gallery referenceElement="arcgis-map"></arcgis-basemap-gallery>
+          {hasOpenedBasemaps ? (
+            <arcgis-basemap-gallery referenceElement="arcgis-map"></arcgis-basemap-gallery>
+          ) : null}
         </calcite-panel>
 
         <calcite-panel heading="Description" data-panel-id="information" hidden>
