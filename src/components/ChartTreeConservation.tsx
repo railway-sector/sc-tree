@@ -52,7 +52,7 @@ function useTreeData(cpackage: any, query: any) {
           statusField: treen_status_f,
         }).pieSeries(),
 
-        fieldStatistic({ ...baseArgs, where: undefined }),
+        fieldStatistic({ ...baseArgs, where: query.queryExpression() }),
       ]);
 
       return { chartData, totalNumber };
