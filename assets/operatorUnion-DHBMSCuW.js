@@ -1,0 +1,1 @@
+import{f6 as o}from"./index-qp4MsmUQ.js";import"./Point2D-DrRbjpKQ.js";import"./MultiPathImpl-S1UJQwdm.js";import{c as u}from"./ProjectionTransformation-S4ZL1uJr.js";const r=new u;function m(t,n,e){return r.execute(t,n,e,null)}function s(t,n){return r.executeMany(new o(t),n,null).next()}function l(){return r.supportsCurves()}export{l as o,m as r,s as u};
