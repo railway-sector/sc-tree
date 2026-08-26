@@ -1,0 +1,1 @@
+import{co as e}from"./index-CDYvqiZJ.js";function p(t){t?.writtenProperties&&t.writtenProperties.forEach(({target:r,propName:o,newOrigin:i})=>{e(r)&&i&&r.originOf(o)!==i&&r.updateOrigin(o,i)})}export{p as i};

@@ -1,1 +1,0 @@
-import{am as m,fH as o,a5 as t}from"./index-qp4MsmUQ.js";import{n as l}from"./projectPointToVector-5RAytSSY.js";import{t as s}from"./dehydratedPoint-Z5ONvFg_.js";function p(n,a,f,e){return!(a==null||e==null||n.length<2)&&(m(a,e)?o(n,a,0,f,e,0,1):(r.x=n[0],r.y=n[1],r.z=n[2],r.spatialReference=a,l(r,f,e)))}const r=s(0,0,0,t.WGS84);export{p};
