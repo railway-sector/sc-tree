@@ -79,12 +79,12 @@ const ChartTreeCompensation = () => {
   const chartRef = useRef<unknown | any | undefined>({});
   const chartID = "pie-compen";
 
-  const new_fontSize = chartPanelwidth / 22.3;
-  const new_valueSize = new_fontSize * 1.55;
-  const new_imageSize = chartPanelwidth * 0.05;
-  const new_pieSeriesScale = 220;
-  const new_pieInnerValueFontSize = "1.1rem";
-  const new_pieInnerLabelFontSize = "0.45em";
+  const fontSize = chartPanelwidth / 22.3;
+  const valueSize = fontSize * 1.55;
+  const imageSize = chartPanelwidth * 0.05;
+  const seriesScale = 220;
+  const innerValueFontSize = "1.1rem";
+  const innerLabelFontSize = "0.45em";
 
   const zoomFiltersRef = useRef(`${cpackage}`);
 
@@ -97,7 +97,6 @@ const ChartTreeCompensation = () => {
     }
 
     const root = rootSetter({ chartID: chartID });
-    root.setThemes([]);
     const chart = chartSetter({ root: root, centerY: 25, y: 10 });
     chartRef.current = chart;
 
@@ -120,7 +119,6 @@ const ChartTreeCompensation = () => {
       centerX: 50,
       x: 50,
       y: 75,
-      // scale: 1.03,
     });
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
@@ -128,7 +126,7 @@ const ChartTreeCompensation = () => {
     // Render chart
     new ChartPieSeriesRender({
       chart,
-      pieSeries: pieSeries,
+      pieSeries,
       legend,
       root,
       qChart: q1,
@@ -137,10 +135,10 @@ const ChartTreeCompensation = () => {
       view: arcgisMap?.view,
       updateChartPanelwidth: setChartPanelwidth,
       data: chartData,
-      seriesScale: new_pieSeriesScale,
+      seriesScale,
       innerLabel: "TREES",
-      innerLabelFontSize: new_pieInnerLabelFontSize,
-      innerValueFontSize: new_pieInnerValueFontSize,
+      innerLabelFontSize,
+      innerValueFontSize,
       layer: treeCompensationLayer,
       statusArray: treem_status_q,
       bkg_color_switch: false,
@@ -172,8 +170,8 @@ const ChartTreeCompensation = () => {
         <img
           src="https://EijiGorilla.github.io/Symbols/Money_Logo.svg"
           alt="Land Logo"
-          height={`${new_imageSize}%`}
-          width={`${new_imageSize}%`}
+          height={`${imageSize}%`}
+          width={`${imageSize}%`}
           style={{ paddingTop: "10px", paddingLeft: "15px" }}
         />
         <dl style={{ alignItems: "center" }}>
@@ -189,7 +187,7 @@ const ChartTreeCompensation = () => {
           <dd
             style={{
               color: valueLabelColor,
-              fontSize: `${new_valueSize}px`,
+              fontSize: `${valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
               lineHeight: "1.2",
@@ -212,6 +210,6 @@ const ChartTreeCompensation = () => {
       ></div>
     </>
   );
-}; // End of lotChartgs
+};
 
 export default ChartTreeCompensation;
