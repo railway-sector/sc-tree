@@ -20,7 +20,7 @@ import {
   rootSetter,
   seriesSetter,
 } from "../chartSetter";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { ChartResponse } from "../interfaceKeys";
 import ChartPieSeriesRender from "chart-pie-series-render";
 import ChartPieSeries from "chart-pie-series";
@@ -44,7 +44,7 @@ function useTreeData(cpackage: any, query: any) {
         statisticType: "count" as const,
       };
 
-      const [chartData, totalNumber] = await Promise.all([
+      const [chartData, totalNumber, totalTrees] = await Promise.all([
         new ChartPieSeries({
           ...baseArgs,
           where: `${query.queryExpression()} AND ${treen_status_f} >= 1`,
@@ -53,10 +53,15 @@ function useTreeData(cpackage: any, query: any) {
         }).pieSeries(),
 
         fieldStatistic({ ...baseArgs, where: query.queryExpression() }),
+        fieldStatistic({
+          ...baseArgs,
+          where: `${query.queryExpression()} AND ${treen_status_f} >= 1`,
+        }),
       ]);
 
-      return { chartData, totalNumber };
+      return { chartData, totalNumber, totalTrees };
     },
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -72,19 +77,21 @@ const ChartTreeConservation = () => {
 
   const { data, isLoading } = useTreeData(cpackage, q1);
   const chartData = data?.chartData || [];
-  const totalNumber = data?.totalNumber || 0;
+  const totalNumber = data?.totalNumber;
+  const totalTrees = thousands_separators(data?.totalTrees || 0);
 
   const pieSeriesRef = useRef<unknown | any | undefined>({});
   const legendRef = useRef<unknown | any | undefined>({});
+  const renderRef = useRef<ChartPieSeriesRender | null>(null);
   const chartRef = useRef<unknown | any | undefined>({});
   const chartID = "pie-cut";
 
-  const new_fontSize = chartPanelwidth / 22.3;
-  const new_valueSize = new_fontSize * 1.55;
-  const new_imageSize = chartPanelwidth * 0.05;
-  const new_pieSeriesScale = 220;
-  const new_pieInnerValueFontSize = "1.1rem";
-  const new_pieInnerLabelFontSize = "0.45em";
+  const fontSize = chartPanelwidth / 22.3;
+  const valueSize = chartPanelwidth / 19;
+  const imageSize = chartPanelwidth * 0.05;
+  const seriesScale = 220;
+  const innerValueFontSize = "1.1rem";
+  const innerLabelFontSize = "0.6em";
 
   const zoomFiltersRef = useRef(`${cpackage}`);
 
@@ -95,10 +102,35 @@ const ChartTreeConservation = () => {
       zoomFiltersRef.current = currentZoomFilters;
       zoomToLayer(treeConservationLayer, arcgisMap?.view);
     }
+  }, [chartData]);
 
+  //--- Keep click-handler-relevant values fresh without rebuilding the
+  //    chart. view lives here too (not passed statically to the
+  //    renderer) since arcgis-scene's view may not be ready on first
+  //    mount.
+  //--- Keep click-handler-relevant values fresh without rebuilding the
+  //    chart. view lives here too (not passed statically to the
+  //    renderer) since arcgis-scene's view may not be ready on first
+  //    mount.
+  const configRef = useRef({
+    qChart: q1,
+    q2Expression: undefined,
+    status_field: treen_status_f,
+    view: arcgisMap?.view,
+  });
+
+  useEffect(() => {
+    configRef.current = {
+      qChart: q1,
+      q2Expression: undefined,
+      status_field: treen_status_f,
+      view: arcgisMap?.view,
+    };
+  }, [data, treen_status_f, arcgisMap]);
+
+  //--- Pie Chart Renderer - created ONCE (mount only)
+  useEffect(() => {
     const root = rootSetter({ chartID: chartID });
-    root.setThemes([]);
-
     const chart = chartSetter({ root: root, centerY: 25, y: 10 });
     chartRef.current = chart;
     const pieSeries = seriesSetter({
@@ -109,7 +141,6 @@ const ChartTreeConservation = () => {
       legendValueText: "{valuePercentTotal.formatNumber('#.')}% ({value})",
       radius: 40,
       innerRadius: 25,
-      y: -6,
     });
     pieSeriesRef.current = pieSeries;
     chart.series.push(pieSeries);
@@ -119,43 +150,53 @@ const ChartTreeConservation = () => {
       root: root,
       centerX: 50,
       x: 50,
-      y: 55,
-      scale: 0.9,
+      y: 75,
     });
     legendRef.current = legend;
     legend.data.setAll(pieSeries.dataItems);
 
-    // Render chart
-    new ChartPieSeriesRender({
+    //--- NOTE: no `view` here — it's read live from configRef.current
+    //    inside chartrender.ts, since arcgis-scene may not have a
+    //    ready `.view` yet at this point.
+    const renderer = new ChartPieSeriesRender({
       chart,
-      pieSeries: pieSeries,
+      pieSeries,
       legend,
       root,
-      qChart: q1,
-      q2Expression: undefined,
-      status_field: treen_status_f,
-      view: arcgisMap?.view,
+      configRef,
       updateChartPanelwidth: setChartPanelwidth,
-      data: chartData,
-      seriesScale: new_pieSeriesScale,
+      data: [],
+      seriesScale,
+      innerValue: totalTrees,
       innerLabel: "TREES",
-      innerLabelFontSize: new_pieInnerLabelFontSize,
-      innerValueFontSize: new_pieInnerValueFontSize,
+      innerLabelFontSize,
+      innerValueFontSize,
       layer: treeConservationLayer,
       statusArray: treen_status_q,
       bkg_color_switch: false,
       seriesFillHash: undefined,
-    }).chartDataRenderer();
+    });
+    renderRef.current = renderer;
+    renderRef.current.chartDataRenderer();
 
     return () => {
       root.dispose();
+      renderRef.current = null;
     };
-  }, [chartID, chartData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // mount-once — do not add dependencies here
 
+  //--- Push new data / inner value / affected-area figures into the
+  //    already-mounted chart. No dispose, no rebuild -> no blink.
+  //    NOTE: affectedAreaValue is NOT called here directly — it's
+  //    registered once inside chartrender.ts and reads live data via
+  //    closures, which updateData() keeps in sync. Calling it here on
+  //    every render would both miss the first paint and stack
+  //    duplicate adapters.
   useEffect(() => {
-    pieSeriesRef.current?.data.setAll(chartData);
-    legendRef.current?.data.setAll(pieSeriesRef.current.dataItems);
-  });
+    if (!renderRef.current) return;
+    renderRef.current.updateData(chartData, totalTrees, treen_status_q);
+  }, [chartData, totalTrees, treen_status_q]);
 
   return (
     <>
@@ -171,15 +212,15 @@ const ChartTreeConservation = () => {
         <img
           src="https://EijiGorilla.github.io/Symbols/Tree_Logo.svg"
           alt="Land Logo"
-          height={`${new_imageSize}%`}
-          width={`${new_imageSize}%`}
+          height={`${imageSize}%`}
+          width={`${imageSize}%`}
           style={{ paddingTop: "10px", paddingLeft: "15px" }}
         />
         <dl style={{ alignItems: "center" }}>
           <dt
             style={{
               color: primaryLabelColor,
-              fontSize: "1.2rem",
+              fontSize: fontSize,
               marginRight: "35px",
             }}
           >
@@ -188,7 +229,7 @@ const ChartTreeConservation = () => {
           <dd
             style={{
               color: valueLabelColor,
-              fontSize: `${new_valueSize}px`,
+              fontSize: `${valueSize}px`,
               fontWeight: "bold",
               fontFamily: "calibri",
               lineHeight: "1.2",
